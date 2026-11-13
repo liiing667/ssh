@@ -100,6 +100,7 @@ func DefaultSessionHandler(srv *Server, conn *gossh.ServerConn, newChan gossh.Ne
 		handler:           srv.Handler,
 		ptyCb:             srv.PtyCallback,
 		sessReqCb:         srv.SessionRequestCallback,
+		agentForwardingCb: srv.AgentForwardingCallback,
 		subsystemHandlers: srv.SubsystemHandlers,
 		ctx:               ctx,
 	}
@@ -119,6 +120,7 @@ type session struct {
 	env               []string
 	ptyCb             PtyCallback
 	sessReqCb         SessionRequestCallback
+	agentForwardingCb AgentForwardingCallback
 	rawCmd            string
 	subsystem         string
 	ctx               Context
@@ -353,7 +355,10 @@ func (sess *session) handleRequests(reqs <-chan *gossh.Request) {
 			}
 			req.Reply(ok, nil)
 		case agentRequestType:
-			// TODO: option/callback to allow agent forwarding
+			if sess.agentForwardingCb == nil || !sess.agentForwardingCb(sess.ctx) {
+				req.Reply(false, nil)
+				continue
+			}
 			SetAgentRequested(sess.ctx)
 			req.Reply(true, nil)
 		case "break":

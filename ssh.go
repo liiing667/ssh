@@ -64,6 +64,12 @@ type LocalPortForwardingCallback func(ctx Context, destinationHost string, desti
 // ReversePortForwardingCallback is a hook for allowing reverse port forwarding
 type ReversePortForwardingCallback func(ctx Context, bindHost string, bindPort uint32) bool
 
+// AgentForwardingCallback is a hook for allowing SSH agent forwarding on a
+// connection. It is invoked when a client requests agent forwarding for a
+// session. Agent forwarding is denied when the callback is nil or returns
+// false.
+type AgentForwardingCallback func(ctx Context) bool
+
 // ServerConfigCallback is a hook for creating custom default server configs
 type ServerConfigCallback func(ctx Context) *gossh.ServerConfig
 

@@ -33,6 +33,26 @@ func AgentRequested(sess Session) bool {
 	return sess.Context().Value(contextKeyAgentRequest) == true
 }
 
+// AgentChannelHandler handles auth-agent channels opened by the server on
+// behalf of a session that opted in to agent forwarding. It only accepts the
+// channel for the connection whose agent forwarding request was authorized;
+// otherwise it rejects the channel with a protocol error.
+func AgentChannelHandler(srv *Server, conn *gossh.ServerConn, newChan gossh.NewChannel, ctx Context) {
+	if ctx.Value(contextKeyAgentRequest) != true {
+		newChan.Reject(gossh.Prohibited, "agent forwarding is disabled")
+		return
+	}
+	ch, reqs, err := newChan.Accept()
+	if err != nil {
+		return
+	}
+	go gossh.DiscardRequests(reqs)
+	go func() {
+		<-ctx.Done()
+		ch.Close()
+	}()
+}
+
 // NewAgentListener sets up a temporary Unix socket that can be communicated
 // to the session environment and used for forwarding connections.
 func NewAgentListener() (net.Listener, error) {

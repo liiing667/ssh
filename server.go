@@ -26,7 +26,8 @@ var DefaultRequestHandlers = map[string]RequestHandler{}
 type ChannelHandler func(srv *Server, conn *gossh.ServerConn, newChan gossh.NewChannel, ctx Context)
 
 var DefaultChannelHandlers = map[string]ChannelHandler{
-	"session": DefaultSessionHandler,
+	"session":        DefaultSessionHandler,
+	agentChannelType: AgentChannelHandler,
 }
 
 // Server defines parameters for running an SSH server. The zero value for
@@ -47,6 +48,7 @@ type Server struct {
 	ConnCallback                  ConnCallback                  // optional callback for wrapping net.Conn before handling
 	LocalPortForwardingCallback   LocalPortForwardingCallback   // callback for allowing local port forwarding, denies all if nil
 	ReversePortForwardingCallback ReversePortForwardingCallback // callback for allowing reverse port forwarding, denies all if nil
+	AgentForwardingCallback       AgentForwardingCallback       // callback for allowing agent forwarding, denies all if nil
 	ServerConfigCallback          ServerConfigCallback          // callback for configuring detailed SSH options
 	SessionRequestCallback        SessionRequestCallback        // callback for allowing or denying SSH sessions
 

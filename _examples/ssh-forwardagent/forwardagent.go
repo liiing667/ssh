@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	ssh.Handle(func(s ssh.Session) {
+	forwardingHandler := func(s ssh.Session) {
 		cmd := exec.Command("ssh-add", "-l")
 		if ssh.AgentRequested(s) {
 			l, err := ssh.NewAgentListener()
@@ -28,8 +28,17 @@ func main() {
 			log.Println(err)
 			return
 		}
-	})
+	}
 
 	log.Println("starting ssh server on port 2222...")
-	log.Fatal(ssh.ListenAndServe(":2222", nil))
+	srv := &ssh.Server{
+		Addr:    ":2222",
+		Handler: forwardingHandler,
+		// Agent forwarding is denied unless the callback explicitly opts in
+		// the connection.
+		AgentForwardingCallback: func(ctx ssh.Context) bool {
+			return true
+		},
+	}
+	log.Fatal(srv.ListenAndServe())
 }
