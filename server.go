@@ -129,8 +129,11 @@ func (srv *Server) config(ctx Context) *gossh.ServerConfig {
 	for _, signer := range srv.HostSigners {
 		config.AddHostKey(signer)
 	}
-	if srv.PasswordHandler == nil && srv.PublicKeyHandler == nil && srv.KeyboardInteractiveHandler == nil {
+	if srv.PasswordHandler == nil && srv.PublicKeyHandler == nil && srv.KeyboardInteractiveHandler == nil &&
+		config.PasswordCallback == nil && config.PublicKeyCallback == nil && config.KeyboardInteractiveCallback == nil {
 		config.NoClientAuth = true
+	} else {
+		config.NoClientAuth = false
 	}
 	if srv.Version != "" {
 		config.ServerVersion = "SSH-2.0-" + srv.Version
